@@ -129,6 +129,7 @@
 		}
 		marker.addEventListener("click", function(){
 			currentJc = obj;
+			currentPoint = point;
 			map.openInfoWindow(infoWindow, point);
 		});
 		map.addOverlay(marker);
@@ -158,7 +159,14 @@
 	}
 	
 	function search() {
-		map.panTo(currentJc || currentPoint);
+		if (!currentPoint) {
+			locationPoint(function(point){
+				currentPoint = point;
+				search();
+			}, false);
+		}
+		map.panTo(currentPoint);
+		map.centerAndZoom(currentPoint, 12);
 		var local = new BMap.LocalSearch(map, {
 			renderOptions:{map: map}
 		});
