@@ -3,8 +3,8 @@
 <title>妍丽流程</title>
 </head>
 <body>
-<div class="mermaid" style="margin-top: 15px;text-align: center;">
-graph TD
+<div id="context" style="display:none;">
+graph LR
 ody[财务中台]
 yanli[妍丽]
 yanli-->|open api|ody
@@ -75,7 +75,7 @@ invoiceVerification-->ver_stm_customer_statement(stm_customer_statement 客户�
 invoiceVerification-->ver_internal_statement(internal_statement 内部结算)-->inv_invoice_verification
 invoiceVerification-->ver_stm_supplier_statement(stm_supplier_statement 供应商经代销结算)-->inv_invoice_verification
 inv_invoice-->|发票尾差处理|cost_adjustment_sheet(cost_adjustment_sheet 成本调整单)
-invoiceVerification-->|有差异-小于容差|cost_adjustment_sheet
+invoiceVerification-->|有差异-大于核销金额|cost_adjustment_sheet
 
 ody-->|采购单-手工录入|ap_advanced_payment(ap_advanced_payment 预付单)
 ody-->|新增|cap_receives(cap_receives 收款单)
@@ -85,10 +85,25 @@ cap_receives_verification-->|回写|update_cap_bank_flow(cap_bank_flow)
 ap_advanced_payment-->|供应商结算单 generateApplications|cap_payment_application(cap_payment_application 付款申请单)
 cap_payment_application-->|审核通过|cap_payment_slip(cap_payment_slip 付款单)
 internal_ap_sheet-->|生成应付单|cap_payment_slip
-
+</div>
+<select id="type" onchange="change()">
+<option value="LR">横向</option>
+<option value="TD">竖向</option>
+</select>
+<div id="mermaid" class="mermaid" style="margin-top: 15px;text-align: center;">
 </div>
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.13.3/mermaid.min.js"></script>
 <script>
+function init() {
+let value = document.getElementById("type").value;
+let idx = location.href.lastIndexOf('?type=');
+if (idx > -1) {
+	value = location.href.substring(idx + 6);
+}
+document.getElementById("type").value = value;
+let context = document.getElementById("context").innerText;
+document.getElementById("mermaid").removeAttribute("data-processed");
+document.getElementById("mermaid").innerHTML = context.replace('graph LR', 'graph ' + value).replace('graph TD', 'graph ' + value);
 mermaid.initialize({
 startOnLoad: true, 
 theme: 'default',
@@ -103,7 +118,21 @@ curve: 'linear',
 nodeSpacing: 40
 }
 });
+}
 
+function change() {
+	let url='';
+	let idx = location.href.lastIndexOf('?');
+	if (idx > -1) {
+	  url=location.href.substring(0, location.href.lastIndexOf('?'));
+	} else {
+	  url=location.href;
+	}
+	let value = document.getElementById("type").value;
+	location.href=url+'?type=' + value;
+}
+
+init();
 /*
 ex_allot_out_order -->|datax|dtl_inventory_mwa_cost(dtl_inventory_mwa_cost 移动加权平均库存成本表)
 ex_allot_in_order -->|datax|dtl_inventory_mwa_cost
