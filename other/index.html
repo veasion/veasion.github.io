@@ -4,7 +4,7 @@
 </head>
 <body>
 <div id="context" style="display:none;">
-graph LR
+graph TD
 ody[财务中台]
 yanli[妍丽]
 yanli-->|open api|ody
@@ -55,7 +55,7 @@ internal_statement_daily-->|GenerateInternalStatementJob|internal_statement(inte
 internal_statement-->|进项|internal_ap_sheet(internal_ap_sheet 内部应付单)
 internal_statement-->|销项|internal_ar_sheet(internal_ar_sheet 内部应收单)
 
-ody --> fee_sharing_rule(费用分摊规则) -->|GeneratingFeePlanJob|fee_plan(fee_plan 费用计划)
+ody --> fee_sharing_rule(fee_sharing_rule 费用分摊规则) -->|GeneratingFeePlanJob|fee_plan(fee_plan 费用计划)
 fee_plan -->|GenerateFeeSheetByFeePlanJob| fee_sheet(fee_sheet 费用单)
 
 dtl_sales_order -->|dtl_sales_order_item| GenerateFeePanItemJob
@@ -87,12 +87,12 @@ cap_payment_application-->|审核通过|cap_payment_slip(cap_payment_slip 付款
 internal_ap_sheet-->|生成应付单|cap_payment_slip
 </div>
 <select id="type" onchange="change()">
-<option value="LR">横向</option>
 <option value="TD">竖向</option>
+<option value="LR">横向</option>
 </select>
 <div id="mermaid" class="mermaid" style="margin-top: 15px;text-align: center;">
 </div>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/8.13.3/mermaid.min.js"></script>
+<script type="text/javascript" src="https://cdn.bootcdn.net/ajax/libs/mermaid/8.11.2/mermaid.min.js"></script>
 <script>
 function init() {
 let value = document.getElementById("type").value;
