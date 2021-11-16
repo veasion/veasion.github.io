@@ -1,90 +1,15 @@
 <!DOCTYPE html>
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>妍丽流程</title>
+<title>flow流程</title>
 </head>
 <body>
 <div id="context" style="display:none;">
 graph TD
-ody[财务中台]
-yanli[妍丽]
-yanli-->|open api|ody
-ody-->base_order(基础业务单据)
-base_order --> ex_purchase_order(ex_purchase_order 采购单)
-base_order --> ex_purchase_return_order(ex_purchase_return_order 采购退货单)
-base_order --> ex_sales_order(ex_sales_order 销售单)
-base_order --> ex_sales_order_invoice(ex_sales_order_invoice 零售开票信息)
-base_order --> ex_sales_order_pay_flow(ex_sales_order_pay_flow 销售支付流水)
-base_order --> ex_sales_return_order(ex_sales_return_order 销退单)
-base_order --> ex_sales_return_order_pay_flow(ex_sales_return_order_pay_flow 退款支付流水)
-base_order --> ex_delivery_order(ex_delivery_order 发货单)
-base_order --> ex_inventory_order(ex_inventory_order 盘点单)
-base_order --> ex_income_order(ex_income_order 损益单)
-base_order --> ex_purchase_warehouse_order(ex_purchase_warehouse_order 采购入库单)
-base_order --> ex_allot_out_order(ex_allot_out_order 调拨出库单)
-base_order --> ex_allot_in_order(ex_allot_in_order 调拨入库单)
-base_order --> ex_work_order(ex_work_order 加工单)
-ex_sales_order_pay_flow --> |datax type=1| dtl_sales_order_pay_flow(dtl_sales_order_pay_flow 支付流水)
-ex_sales_return_order_pay_flow --> |datax type=2| dtl_sales_order_pay_flow
-ex_sales_order --> |datax type=1| dtl_sales_order(dtl_sales_order 订单)
-ex_sales_return_order --> |datax type=2| dtl_sales_order
-
-dtl_sales_order_pay_flow -->|GenerateCollectingSalesOrderSummaryJob 商场代收| collecting_sales_order_summary(collecting_sales_order_summary 平台代收汇总表)
-collecting_sales_order_summary --> |batchCreateStatementWithTx| stm_customer_statement(stm_customer_statement 客户结算)
-dtl_sales_order_pay_flow -->|datax 银盛|cap_third_flow(cap_third_flow 第三方流水)
-cap_third_flow -->|GenerateCapThirdFlowSummaryJob| cap_third_flow_summary(cap_third_flow_summary 三方统收汇总)
-cap_third_flow_summary -->|CapBankFlowJob| cap_bank_flow(cap_bank_flow 银行流水)
-
-ex_purchase_return_order -->|datax contract_type=1|stm_reseller_collecting_detail(stm_reseller_collecting_detail 经销货款结算明细)
-ex_purchase_warehouse_order -->|datax contract_type=1|stm_reseller_collecting_detail
-stm_reseller_collecting_detail -->|GenerateStatementOfAccountJob|stm_supplier_statement(stm_supplier_statement 供应商经代销结算单)
-
-ex_delivery_order --> GenerateStmConsignmentCollectingDetailJob
-ex_sales_return_order --> GenerateStmConsignmentCollectingDetailJob
-ex_inventory_order --> GenerateStmConsignmentCollectingDetailJob
-ex_income_order --> GenerateStmConsignmentCollectingDetailJob
-GenerateStmConsignmentCollectingDetailJob --> stm_consignment_collecting_detail(stm_consignment_collecting_detail 代销货款结算明细)
-stm_consignment_collecting_detail -->|GenerateConsignmentCollectingDailyJob|stm_consignment_collecting_daily(stm_consignment_collecting_daily 代销结算日汇总单)
-stm_consignment_collecting_detail -->|GenerateStatementOfAccountJob|stm_supplier_statement
-fee_sheet(fee_sheet 费用单)
-fee_sheet -->|GenerateStatementOfSettlingCycleJob|stm_supplier_statement
-
-ody --> internal_settling_rule(内部结算规则)
-internal_settling_rule --> GenerateInternalStatementDailyJob
-GenerateInternalStatementDailyJob -->|dtl_sales_order_item|internal_statement_daily(internal_statement_daily 内部结算日账单)
-internal_statement_daily-->|GenerateInternalStatementJob|internal_statement(internal_statement 内部结算单)
-internal_statement-->|进项|internal_ap_sheet(internal_ap_sheet 内部应付单)
-internal_statement-->|销项|internal_ar_sheet(internal_ar_sheet 内部应收单)
-
-ody --> fee_sharing_rule(fee_sharing_rule 费用分摊规则) -->|GeneratingFeePlanJob|fee_plan(fee_plan 费用计划)
-fee_plan -->|GenerateFeeSheetByFeePlanJob| fee_sheet(fee_sheet 费用单)
-
-dtl_sales_order -->|dtl_sales_order_item| GenerateFeePanItemJob
-ex_inventory_order -->|ex_inventory_order_item| GenerateFeePanItemJob
-ex_income_order -->|ex_income_order_item| GenerateFeePanItemJob
-ex_purchase_warehouse_order -->|ex_purchase_warehouse_order_item| GenerateFeePanItemJob
-ex_purchase_return_order -->|ex_purchase_return_order_item| GenerateFeePanItemJob
-GenerateFeePanItemJob --> fee_plan_item
-
-
-ody-->inv_invoice(inv_invoice 发票)
-inv_invoice_verification(inv_invoice_verification 发票核销明细)
-inv_invoice-->inv_invoice_detail(inv_invoice_detail 发票明细)
-inv_invoice-->invoiceVerification(发票核销)
-invoice_write_off_tolerance-->|容差值|invoiceVerification
-invoiceVerification-->ver_stm_customer_statement(stm_customer_statement 客户结算)-->inv_invoice_verification
-invoiceVerification-->ver_internal_statement(internal_statement 内部结算)-->inv_invoice_verification
-invoiceVerification-->ver_stm_supplier_statement(stm_supplier_statement 供应商经代销结算)-->inv_invoice_verification
-inv_invoice-->|发票尾差处理|cost_adjustment_sheet(cost_adjustment_sheet 成本调整单)
-invoiceVerification-->|有差异-大于核销金额|cost_adjustment_sheet
-
-ody-->|采购单-手工录入|ap_advanced_payment(ap_advanced_payment 预付单)
-ody-->|新增|cap_receives(cap_receives 收款单)
-cap_receives-->|核销|cap_receives_verification(cap_receives_verification 收款单核销)
-ap_advanced_payment-->cap_receives_verification
-cap_receives_verification-->|回写|update_cap_bank_flow(cap_bank_flow)
-ap_advanced_payment-->|供应商结算单 generateApplications|cap_payment_application(cap_payment_application 付款申请单)
-cap_payment_application-->|审核通过|cap_payment_slip(cap_payment_slip 付款单)
-internal_ap_sheet-->|生成应付单|cap_payment_slip
+a1((节点A))-->a2[节点B]
+a2-->|描述|a3[节点C]
+a3-->a4{判断}
+a4-->|true|xxx1
+a4-->|false|xxx2
 </div>
 <select id="type" onchange="change()">
 <option value="TD">竖向</option>
@@ -133,17 +58,6 @@ function change() {
 }
 
 init();
-/*
-ex_allot_out_order -->|datax|dtl_inventory_mwa_cost(dtl_inventory_mwa_cost 移动加权平均库存成本表)
-ex_allot_in_order -->|datax|dtl_inventory_mwa_cost
-ex_income_order -->|datax|dtl_inventory_mwa_cost
-ex_inventory_order -->|datax|dtl_inventory_mwa_cost
-ex_sales_return_order -->|datax|dtl_inventory_mwa_cost
-ex_delivery_order -->|datax|dtl_inventory_mwa_cost
-ex_work_order -->|datax|dtl_inventory_mwa_cost
-ex_purchase_return_order -->|datax|dtl_inventory_mwa_cost
-ex_purchase_warehouse_order -->|datax|dtl_inventory_mwa_cost
-*/
 </script>
 
 </body>
