@@ -5,11 +5,32 @@
 <body>
 <div id="context" style="display:none;">
 graph TD
-a1((节点A))-->a2[节点B]
-a2-->|描述|a3[节点C]
-a3-->a4{判断}
-a4-->|true|xxx1
-a4-->|false|xxx2
+
+录音设备-->|蓝牙|app
+
+subgraph APP端 uniapp
+app[数据处理]-->本地缓存-->|javacv|分段/空音频处理/语言断句-->append[上传七牛云]
+end
+
+subgraph 服务器端
+server_api[服务器接口]-->保存数据库
+超时job-->30分钟未处理数据-->重处理
+server_api-->check[检查资源占用]
+check-->|有空闲|触发数据流
+check-->|无空闲|检查队列阈值
+检查队列阈值-->|正常|队列等待-->触发数据流
+检查队列阈值-->|负载|动态扩容
+动态扩容-->队列等待
+动态扩容-->|扩容|k8s+docker-->线程空闲回收监听
+end
+
+append-->|user_id + audio_url|server_api[服务器接口]
+
+subgraph k8s docker apache store
+flow-->下载音频-->语言转换-->数据分析-->结果入库-->接口通知服务器
+end
+
+触发数据流-->|id + audio_url|flow
 </div>
 <select id="type" onchange="change()">
 <option value="TD">竖向</option>
